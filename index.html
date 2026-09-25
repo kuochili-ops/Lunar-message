@@ -338,24 +338,37 @@ MAY THE FORCE BE WITH YOU</textarea>
             textTexture.needsUpdate = true;
         }
 
-        // --- 5. 輪播與【兩階段球體旋轉：水平 Y 軸旋轉 ➔ 球體點頭 X 軸向下傾斜】 ---
+        // --- 5. 輪播控制與【錄影自動化連動】 ---
         let messageList = ["祝大家中秋節快樂！", "月圓人團圓，事事順心！", "MAY THE FORCE BE WITH YOU"];
         let msgIndex = 0;
+        let carouselTimer = null;
+        let isRecordingSequence = false;
+        let recordedMessagesCount = 0;
 
         function updateCarousel() {
             renderHologramText(messageList[msgIndex]);
             msgIndex = (msgIndex + 1) % messageList.length;
+
+            if (isRecordingSequence) {
+                recordedMessagesCount++;
+                // 當所有訊息皆播放完全一次後，自動完成錄影下載
+                if (recordedMessagesCount >= messageList.length) {
+                    setTimeout(() => stopAndDownloadRecording(), 3800);
+                }
+            }
         }
 
-        setInterval(updateCarousel, 4000);
-        updateCarousel();
+        function startCarousel() {
+            if (carouselTimer) clearInterval(carouselTimer);
+            updateCarousel();
+            carouselTimer = setInterval(updateCarousel, 3800);
+        }
 
         const uiPanel = document.getElementById('ui-panel');
         document.getElementById('panel-toggle-btn').onclick = () => uiPanel.classList.toggle('collapsed');
 
         const START_ANGLE_Y = Math.PI * 0.5;
         const TARGET_ANGLE_Y = Math.PI * 1.5;
-        // 球體向下點頭角度：補足北半球緯度，讓凹盤與文字完全垂直正面面對螢幕
         const TARGET_ANGLE_X = 0.52; 
 
         function resetSpherePose() {
@@ -363,28 +376,95 @@ MAY THE FORCE BE WITH YOU</textarea>
         }
 
         resetSpherePose();
+        startCarousel();
 
         document.getElementById('play-btn').onclick = () => {
             const val = document.getElementById('msg-input').value.trim();
             if (val) {
                 messageList = val.split('\n').filter(s => s.trim());
-                msgIndex = 0;
-                updateCarousel();
             }
+            msgIndex = 0;
             uiPanel.classList.add('collapsed');
-            resetSpherePose(); // 重置姿態
+            resetSpherePose();
+            startCarousel();
         };
 
+        // --- 6. MediaRecorder 自動錄影控制核心 ---
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        const recordBtn = document.getElementById('record-btn');
+
+        recordBtn.onclick = () => {
+            if (isRecordingSequence) return;
+
+            const val = document.getElementById('msg-input').value.trim();
+            if (val) {
+                messageList = val.split('\n').filter(s => s.trim());
+            }
+
+            // 1. 初始化錄影狀態與文字輪播計數
+            isRecordingSequence = true;
+            recordedMessagesCount = 0;
+            msgIndex = 0;
+            recordBtn.innerText = "🔴 錄影中...";
+            recordBtn.style.background = "rgba(255, 50, 50, 0.2)";
+            recordBtn.style.color = "#ff4444";
+            uiPanel.classList.add('collapsed');
+
+            // 2. 復位球體並啟動錄影器
+            resetSpherePose();
+
+            const stream = renderer.domElement.captureStream(60);
+            recordedChunks = [];
+            
+            let mimeType = 'video/webm;codecs=vp9';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = 'video/webm';
+            }
+
+            mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 8000000 });
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) recordedChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `DeathStar_HoloComm_Transmission.webm`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                // 重置錄影按鈕 UI
+                isRecordingSequence = false;
+                recordBtn.innerText = "🎥 錄影下載";
+                recordBtn.style.background = "rgba(0, 255, 170, 0.12)";
+                recordBtn.style.color = "#00ffaa";
+            };
+
+            mediaRecorder.start();
+            startCarousel();
+        };
+
+        function stopAndDownloadRecording() {
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+            }
+        }
+
+        // 7. 動畫主循環
         let animTime = 0;
         function animate() {
             requestAnimationFrame(animate);
 
-            // 【階段 1】：球體水平順暢旋轉 180 度
+            // 階段 1: 水平旋轉
             if (planetMesh.rotation.y < TARGET_ANGLE_Y) {
                 planetMesh.rotation.y += 0.006;
                 if (planetMesh.rotation.y > TARGET_ANGLE_Y) planetMesh.rotation.y = TARGET_ANGLE_Y;
             } 
-            // 【階段 2】：水平轉完後，死星球體整體「往下傾斜（Pitch Down）」，把北半球凹盤與文字送至畫面正中央
+            // 階段 2: 旋轉完成後向下傾斜點頭
             else if (planetMesh.rotation.x < TARGET_ANGLE_X) {
                 planetMesh.rotation.x += 0.005;
                 if (planetMesh.rotation.x > TARGET_ANGLE_X) planetMesh.rotation.x = TARGET_ANGLE_X;
