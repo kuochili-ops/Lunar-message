@@ -338,10 +338,11 @@ MAY THE FORCE BE WITH YOU</textarea>
             textTexture.needsUpdate = true;
         }
 
-        // --- 5. 輪播控制與【錄影自動化連動】 ---
+        // --- 5. 輪播控制與【轉動居中後才開始輪播】邏輯 ---
         let messageList = ["祝大家中秋節快樂！", "月圓人團圓，事事順心！", "MAY THE FORCE BE WITH YOU"];
         let msgIndex = 0;
         let carouselTimer = null;
+        let isCarouselRunning = false;
         let isRecordingSequence = false;
         let recordedMessagesCount = 0;
 
@@ -351,17 +352,29 @@ MAY THE FORCE BE WITH YOU</textarea>
 
             if (isRecordingSequence) {
                 recordedMessagesCount++;
-                // 當所有訊息皆播放完全一次後，自動完成錄影下載
                 if (recordedMessagesCount >= messageList.length) {
                     setTimeout(() => stopAndDownloadRecording(), 3800);
                 }
             }
         }
 
-        function startCarousel() {
-            if (carouselTimer) clearInterval(carouselTimer);
+        function triggerCarouselStart() {
+            if (isCarouselRunning) return;
+            isCarouselRunning = true;
+            msgIndex = 0;
+            recordedMessagesCount = 0;
             updateCarousel();
             carouselTimer = setInterval(updateCarousel, 3800);
+        }
+
+        function stopCarousel() {
+            if (carouselTimer) {
+                clearInterval(carouselTimer);
+                carouselTimer = null;
+            }
+            isCarouselRunning = false;
+            textCtx.clearRect(0, 0, 1024, 1024);
+            textTexture.needsUpdate = true;
         }
 
         const uiPanel = document.getElementById('ui-panel');
@@ -372,24 +385,22 @@ MAY THE FORCE BE WITH YOU</textarea>
         const TARGET_ANGLE_X = 0.52; 
 
         function resetSpherePose() {
+            stopCarousel();
             planetMesh.rotation.set(0, START_ANGLE_Y, 0);
         }
 
         resetSpherePose();
-        startCarousel();
 
         document.getElementById('play-btn').onclick = () => {
             const val = document.getElementById('msg-input').value.trim();
             if (val) {
                 messageList = val.split('\n').filter(s => s.trim());
             }
-            msgIndex = 0;
             uiPanel.classList.add('collapsed');
             resetSpherePose();
-            startCarousel();
         };
 
-        // --- 6. MediaRecorder 自動錄影控制核心 ---
+        // --- 6. MediaRecorder 自動錄影 ---
         let mediaRecorder = null;
         let recordedChunks = [];
         const recordBtn = document.getElementById('record-btn');
@@ -402,16 +413,12 @@ MAY THE FORCE BE WITH YOU</textarea>
                 messageList = val.split('\n').filter(s => s.trim());
             }
 
-            // 1. 初始化錄影狀態與文字輪播計數
             isRecordingSequence = true;
-            recordedMessagesCount = 0;
-            msgIndex = 0;
             recordBtn.innerText = "🔴 錄影中...";
             recordBtn.style.background = "rgba(255, 50, 50, 0.2)";
             recordBtn.style.color = "#ff4444";
             uiPanel.classList.add('collapsed');
 
-            // 2. 復位球體並啟動錄影器
             resetSpherePose();
 
             const stream = renderer.domElement.captureStream(60);
@@ -437,7 +444,6 @@ MAY THE FORCE BE WITH YOU</textarea>
                 a.click();
                 URL.revokeObjectURL(url);
 
-                // 重置錄影按鈕 UI
                 isRecordingSequence = false;
                 recordBtn.innerText = "🎥 錄影下載";
                 recordBtn.style.background = "rgba(0, 255, 170, 0.12)";
@@ -445,7 +451,6 @@ MAY THE FORCE BE WITH YOU</textarea>
             };
 
             mediaRecorder.start();
-            startCarousel();
         };
 
         function stopAndDownloadRecording() {
@@ -454,7 +459,7 @@ MAY THE FORCE BE WITH YOU</textarea>
             }
         }
 
-        // 7. 動畫主循環
+        // 7. 動畫主循環（當轉動完全到達最終對齊位置時，觸發輪播開始）
         let animTime = 0;
         function animate() {
             requestAnimationFrame(animate);
@@ -467,7 +472,14 @@ MAY THE FORCE BE WITH YOU</textarea>
             // 階段 2: 旋轉完成後向下傾斜點頭
             else if (planetMesh.rotation.x < TARGET_ANGLE_X) {
                 planetMesh.rotation.x += 0.005;
-                if (planetMesh.rotation.x > TARGET_ANGLE_X) planetMesh.rotation.x = TARGET_ANGLE_X;
+                if (planetMesh.rotation.x > TARGET_ANGLE_X) {
+                    planetMesh.rotation.x = TARGET_ANGLE_X;
+                    // 【關鍵修正】：旋轉動作完全結束，文字畫面停在畫面正中央時，啟動輪播！
+                    triggerCarouselStart();
+                }
+            } else {
+                // 姿態已到達畫面正中央，確保輪播持續
+                triggerCarouselStart();
             }
 
             animTime += 0.05;
