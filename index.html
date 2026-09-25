@@ -137,7 +137,7 @@ MAY THE FORCE BE WITH YOU</textarea>
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
 
-        // --- 1. 動態 Canvas 貼圖（死星發射孔畫在 Canvas 512, 512 -> 對應 3D 空間 -X 軸） ---
+        // --- 1. 動態 Canvas 貼圖（死星發射孔畫在 Canvas 右半邊 X = 1536, Y = 512） ---
         function createPlanetTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 2048; canvas.height = 1024;
@@ -146,37 +146,37 @@ MAY THE FORCE BE WITH YOU</textarea>
             ctx.fillStyle = '#1e2228';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 右半面 (1024 ~ 2048)：月球質感
-            const imgData = ctx.getImageData(canvas.width / 2, 0, canvas.width / 2, canvas.height);
+            // 左半面 (0 ~ 1024)：月球質感
+            const imgData = ctx.getImageData(0, 0, canvas.width / 2, canvas.height);
             const data = imgData.data;
             for (let i = 0; i < data.length; i += 4) {
                 let n = (Math.random() * 50 - 25) + Math.sin(i * 0.005) * 20;
                 let val = 150 + n;
                 data[i] = val; data[i+1] = val + 2; data[i+2] = val + 8;
             }
-            ctx.putImageData(imgData, canvas.width / 2, 0);
+            ctx.putImageData(imgData, 0, 0);
 
             // 月球坑洞
             ctx.fillStyle = 'rgba(100, 105, 115, 0.4)';
             for(let i=0; i<40; i++) {
-                let cx = canvas.width / 2 + Math.random() * (canvas.width / 2);
+                let cx = Math.random() * (canvas.width / 2);
                 let cy = Math.random() * canvas.height;
                 let cr = 10 + Math.random() * 40;
                 ctx.beginPath(); ctx.arc(cx, cy, cr, 0, Math.PI * 2); ctx.fill();
             }
 
-            // 左半面 (0 ~ 1024)：死星裝甲板
+            // 右半面 (1024 ~ 2048)：死星裝甲板
             ctx.strokeStyle = '#0d1014'; ctx.lineWidth = 4;
             for (let y = 0; y < canvas.height; y += 24) {
-                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width / 2, y); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(canvas.width / 2, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
 
             // 赤道溝槽
             ctx.fillStyle = '#080a0c';
-            ctx.fillRect(0, canvas.height / 2 - 16, canvas.width / 2, 32);
+            ctx.fillRect(canvas.width / 2, canvas.height / 2 - 16, canvas.width / 2, 32);
 
-            // 超級雷射凹面圓盤 (Dish Center：X = 512, Y = 512)
-            const dishX = canvas.width * 0.25;
+            // 超級雷射凹面圓盤 (Dish Center：X = 1536, Y = 512，對應 3D 空間 +X 軸)
+            const dishX = canvas.width * 0.75;
             const dishY = canvas.height * 0.50;
             const dishR = 160;
 
@@ -215,10 +215,10 @@ MAY THE FORCE BE WITH YOU</textarea>
         scene.add(dirLight);
         scene.add(new THREE.AmbientLight(0x223344, 0.6));
 
-        // --- 2. 修正發射孔錨點：精確設定於 (-2.2, 0, 0)，與凹盤 100% 鎖定 ---
+        // --- 2. 修正發射孔錨點：絕對綁定於 (+2.2, 0, 0)，與死星凹盤 100% 緊貼 ---
         const superlaserAnchorGroup = new THREE.Group();
-        superlaserAnchorGroup.position.set(-2.2, 0, 0); 
-        superlaserAnchorGroup.rotation.set(0, -Math.PI / 2, 0);
+        superlaserAnchorGroup.position.set(2.2, 0, 0); 
+        superlaserAnchorGroup.rotation.set(0, Math.PI / 2, 0);
         planetMesh.add(superlaserAnchorGroup);
 
         // 全息光錐
@@ -286,7 +286,7 @@ MAY THE FORCE BE WITH YOU</textarea>
             textTexture.needsUpdate = true;
         }
 
-        // --- 4. 輪播與自動旋轉方向控制 ---
+        // --- 4. 輪播與正確的轉動方向 ---
         let messageList = ["祝大家中秋節快樂！", "月圓人團圓，事事順心！", "MAY THE FORCE BE WITH YOU"];
         let msgIndex = 0;
 
@@ -301,8 +301,8 @@ MAY THE FORCE BE WITH YOU</textarea>
         const uiPanel = document.getElementById('ui-panel');
         document.getElementById('panel-toggle-btn').onclick = () => uiPanel.classList.toggle('collapsed');
 
-        // 初始化旋轉角度：將月球放在鏡頭正面 (PI)，死星隱藏在背面
-        planetMesh.rotation.y = Math.PI;
+        // 初始化角度：讓月球正面朝向鏡頭 (0)
+        planetMesh.rotation.y = 0;
 
         document.getElementById('play-btn').onclick = () => {
             const val = document.getElementById('msg-input').value.trim();
@@ -312,17 +312,17 @@ MAY THE FORCE BE WITH YOU</textarea>
                 updateCarousel();
             }
             uiPanel.classList.add('collapsed');
-            // 重置為月球正面，重新觸發轉動
-            planetMesh.rotation.y = Math.PI;
+            // 按下展演時重新從月球角度開始旋轉
+            planetMesh.rotation.y = 0;
         };
 
         let animTime = 0;
         function animate() {
             requestAnimationFrame(animate);
 
-            // 自動慢速旋轉：從 Math.PI (月球) 平滑旋轉到 Math.PI * 0.5 (死星發射孔面對觀察者)
-            if (planetMesh.rotation.y > Math.PI * 0.5) {
-                planetMesh.rotation.y -= 0.006;
+            // 自動慢速旋轉：從 0 (月球正面) 平滑向右旋轉至 Math.PI * 0.5 (死星發射孔面對觀察者)
+            if (planetMesh.rotation.y < Math.PI * 0.5) {
+                planetMesh.rotation.y += 0.006;
             }
 
             animTime += 0.05;
