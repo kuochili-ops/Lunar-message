@@ -24,14 +24,12 @@
             width: 100%;
             height: 100%;
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             z-index: 1;
         }
         .hud-header {
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: 20px; left: 20px;
             z-index: 10;
             pointer-events: none;
             border-left: 3px solid #00ffaa;
@@ -42,126 +40,56 @@
             box-shadow: 0 0 15px rgba(0, 255, 170, 0.15);
         }
         .hud-title {
-            font-size: 16px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            color: #ffffff;
-            text-transform: uppercase;
-            text-shadow: 0 0 8px #00ffaa;
+            font-size: 16px; font-weight: 800; letter-spacing: 2px;
+            color: #ffffff; text-transform: uppercase; text-shadow: 0 0 8px #00ffaa;
         }
         .hud-subtitle {
-            font-size: 11px;
-            color: #00ffaa;
-            opacity: 0.8;
-            letter-spacing: 1px;
-            margin-top: 2px;
+            font-size: 11px; color: #00ffaa; opacity: 0.8; letter-spacing: 1px; margin-top: 2px;
         }
         .top-right-controls {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 10;
-            display: flex;
-            gap: 10px;
+            position: absolute; top: 20px; right: 20px; z-index: 10;
+            display: flex; gap: 10px;
         }
         .icon-btn {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: rgba(5, 20, 25, 0.75);
-            border: 1px solid rgba(0, 255, 170, 0.4);
-            color: #00ffaa;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            backdrop-filter: blur(8px);
-            transition: all 0.3s ease;
-            box-shadow: 0 0 10px rgba(0, 255, 170, 0.2);
-        }
-        .icon-btn:active {
-            transform: scale(0.92);
-            background: rgba(0, 255, 170, 0.3);
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(5, 20, 25, 0.75); border: 1px solid rgba(0, 255, 170, 0.4);
+            color: #00ffaa; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; backdrop-filter: blur(8px);
         }
         .ui-panel {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 40px);
-            max-width: 500px;
-            background: rgba(5, 15, 22, 0.88);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 255, 170, 0.3);
-            border-radius: 16px;
-            padding: 18px;
-            z-index: 10;
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: calc(100% - 40px); max-width: 500px;
+            background: rgba(5, 15, 22, 0.88); backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 255, 170, 0.3); border-radius: 16px;
+            padding: 18px; z-index: 10;
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
         }
         .ui-panel.collapsed {
-            transform: translate(-50%, calc(100% + 30px));
-            opacity: 0;
-            pointer-events: none;
+            transform: translate(-50%, calc(100% + 30px)); opacity: 0; pointer-events: none;
         }
         .panel-toggle-btn {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9;
-            padding: 10px 20px;
-            background: rgba(5, 20, 25, 0.85);
-            border: 1px solid #00ffaa;
-            border-radius: 20px;
-            color: #00ffaa;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 9; padding: 10px 20px; background: rgba(5, 20, 25, 0.85);
+            border: 1px solid #00ffaa; border-radius: 20px; color: #00ffaa;
+            font-size: 13px; font-weight: bold; cursor: pointer; backdrop-filter: blur(8px);
         }
         textarea.msg-input {
-            width: 100%;
-            height: 70px;
-            background: rgba(0, 10, 18, 0.7);
-            border: 1px solid rgba(0, 255, 170, 0.3);
-            border-radius: 8px;
-            color: #ffffff;
-            padding: 10px;
-            font-size: 14px;
-            resize: none;
-            outline: none;
+            width: 100%; height: 70px; background: rgba(0, 10, 18, 0.7);
+            border: 1px solid rgba(0, 255, 170, 0.3); border-radius: 8px;
+            color: #ffffff; padding: 10px; font-size: 14px; resize: none; outline: none;
         }
-        .btn-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
-        }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         .btn {
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #00ffaa;
-            background: rgba(0, 255, 170, 0.12);
-            color: #00ffaa;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
+            padding: 12px; border-radius: 8px; border: 1px solid #00ffaa;
+            background: rgba(0, 255, 170, 0.12); color: #00ffaa; font-size: 13px;
+            font-weight: bold; cursor: pointer;
         }
-        .btn-primary {
-            background: #00ffaa;
-            color: #030508;
-            border: none;
-        }
+        .btn-primary { background: #00ffaa; color: #030508; border: none; }
         .scanlines {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-            background-size: 100% 4px;
-            z-index: 2;
-            opacity: 0.6;
+            background-size: 100% 4px; z-index: 2; opacity: 0.6;
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -204,56 +132,51 @@ MAY THE FORCE BE WITH YOU</textarea>
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
         container.appendChild(renderer.domElement);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
 
-        // --- 1. 動態 Canvas 貼圖（精確設置發射孔於 UV 0.75, 0.50） ---
+        // --- 1. 動態 Canvas 貼圖（死星發射孔畫在 Canvas 512, 512 -> 對應 3D 空間 -X 軸） ---
         function createPlanetTexture() {
             const canvas = document.createElement('canvas');
-            canvas.width = 2048;
-            canvas.height = 1024;
+            canvas.width = 2048; canvas.height = 1024;
             const ctx = canvas.getContext('2d');
 
-            // 底色
             ctx.fillStyle = '#1e2228';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 左半面 (0 ~ 1024)：月球質感
-            const imgData = ctx.getImageData(0, 0, canvas.width / 2, canvas.height);
+            // 右半面 (1024 ~ 2048)：月球質感
+            const imgData = ctx.getImageData(canvas.width / 2, 0, canvas.width / 2, canvas.height);
             const data = imgData.data;
             for (let i = 0; i < data.length; i += 4) {
                 let n = (Math.random() * 50 - 25) + Math.sin(i * 0.005) * 20;
                 let val = 150 + n;
                 data[i] = val; data[i+1] = val + 2; data[i+2] = val + 8;
             }
-            ctx.putImageData(imgData, 0, 0);
+            ctx.putImageData(imgData, canvas.width / 2, 0);
 
             // 月球坑洞
             ctx.fillStyle = 'rgba(100, 105, 115, 0.4)';
             for(let i=0; i<40; i++) {
-                let cx = Math.random() * (canvas.width / 2);
+                let cx = canvas.width / 2 + Math.random() * (canvas.width / 2);
                 let cy = Math.random() * canvas.height;
                 let cr = 10 + Math.random() * 40;
                 ctx.beginPath(); ctx.arc(cx, cy, cr, 0, Math.PI * 2); ctx.fill();
             }
 
-            // 右半面 (1024 ~ 2048)：死星裝甲板
-            ctx.strokeStyle = '#0d1014';
-            ctx.lineWidth = 4;
+            // 左半面 (0 ~ 1024)：死星裝甲板
+            ctx.strokeStyle = '#0d1014'; ctx.lineWidth = 4;
             for (let y = 0; y < canvas.height; y += 24) {
-                ctx.beginPath(); ctx.moveTo(canvas.width / 2, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width / 2, y); ctx.stroke();
             }
 
             // 赤道溝槽
             ctx.fillStyle = '#080a0c';
-            ctx.fillRect(canvas.width / 2, canvas.height / 2 - 16, canvas.width / 2, 32);
+            ctx.fillRect(0, canvas.height / 2 - 16, canvas.width / 2, 32);
 
-            // 超級雷射凹面圓盤 (Dish Center：X = 1536, Y = 512，即 UV 0.75, 0.50)
-            const dishX = canvas.width * 0.75;
+            // 超級雷射凹面圓盤 (Dish Center：X = 512, Y = 512)
+            const dishX = canvas.width * 0.25;
             const dishY = canvas.height * 0.50;
             const dishR = 160;
 
@@ -269,10 +192,7 @@ MAY THE FORCE BE WITH YOU</textarea>
             // 發射孔中心綠點
             ctx.beginPath();
             ctx.arc(dishX, dishY, 18, 0, Math.PI * 2);
-            ctx.fillStyle = '#00ff88';
-            ctx.shadowColor = '#00ff88';
-            ctx.shadowBlur = 20;
-            ctx.fill();
+            ctx.fillStyle = '#00ff88'; ctx.shadowColor = '#00ff88'; ctx.shadowBlur = 20; ctx.fill();
 
             const texture = new THREE.CanvasTexture(canvas);
             texture.needsUpdate = true;
@@ -295,10 +215,10 @@ MAY THE FORCE BE WITH YOU</textarea>
         scene.add(dirLight);
         scene.add(new THREE.AmbientLight(0x223344, 0.6));
 
-        // --- 2. 精確發射孔錨點（鎖定 3D 向量 (2.2, 0, 0)，對應 UV 0.75, 0.50） ---
+        // --- 2. 修正發射孔錨點：精確設定於 (-2.2, 0, 0)，與凹盤 100% 鎖定 ---
         const superlaserAnchorGroup = new THREE.Group();
-        superlaserAnchorGroup.position.set(2.2, 0, 0); 
-        superlaserAnchorGroup.rotation.set(0, Math.PI / 2, 0);
+        superlaserAnchorGroup.position.set(-2.2, 0, 0); 
+        superlaserAnchorGroup.rotation.set(0, -Math.PI / 2, 0);
         planetMesh.add(superlaserAnchorGroup);
 
         // 全息光錐
@@ -306,12 +226,7 @@ MAY THE FORCE BE WITH YOU</textarea>
         coneGeo.translate(0, 1.75, 0);
         coneGeo.rotateX(Math.PI / 2);
         const holoCone = new THREE.Mesh(coneGeo, new THREE.MeshBasicMaterial({
-            color: 0x00ff88,
-            transparent: true,
-            opacity: 0.25,
-            side: THREE.DoubleSide,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false
+            color: 0x00ff88, transparent: true, opacity: 0.25, side: THREE.DoubleSide, blending: THREE.AdditiveBlending
         }));
         superlaserAnchorGroup.add(holoCone);
 
@@ -324,12 +239,7 @@ MAY THE FORCE BE WITH YOU</textarea>
         const textPlane = new THREE.Mesh(
             new THREE.PlaneGeometry(3.2, 3.2),
             new THREE.MeshBasicMaterial({
-                map: textTexture,
-                transparent: true,
-                opacity: 0.95,
-                side: THREE.DoubleSide,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false
+                map: textTexture, transparent: true, opacity: 0.95, side: THREE.DoubleSide, blending: THREE.AdditiveBlending
             })
         );
         textPlane.position.set(0, 0, 3.5);
@@ -338,8 +248,7 @@ MAY THE FORCE BE WITH YOU</textarea>
         function renderHologramText(rawText) {
             textCtx.clearRect(0, 0, 1024, 1024);
 
-            textCtx.strokeStyle = 'rgba(0, 255, 136, 0.4)';
-            textCtx.lineWidth = 4;
+            textCtx.strokeStyle = 'rgba(0, 255, 136, 0.4)'; textCtx.lineWidth = 4;
             textCtx.beginPath(); textCtx.arc(512, 512, 480, 0, Math.PI * 2); textCtx.stroke();
             textCtx.beginPath(); textCtx.arc(512, 512, 360, 0, Math.PI * 2); textCtx.stroke();
 
@@ -348,12 +257,8 @@ MAY THE FORCE BE WITH YOU</textarea>
                 const words = rawText.split(' ');
                 let cur = '';
                 words.forEach(w => {
-                    if ((cur + ' ' + w).length > 12) {
-                        lines.push(cur.trim());
-                        cur = w;
-                    } else {
-                        cur += (cur ? ' ' : '') + w;
-                    }
+                    if ((cur + ' ' + w).length > 12) { lines.push(cur.trim()); cur = w; }
+                    else { cur += (cur ? ' ' : '') + w; }
                 });
                 if (cur) lines.push(cur.trim());
             } else {
@@ -361,15 +266,12 @@ MAY THE FORCE BE WITH YOU</textarea>
                     const mid = Math.ceil(rawText.length / 2);
                     lines.push(rawText.substring(0, mid));
                     lines.push(rawText.substring(mid));
-                } else {
-                    lines.push(rawText);
-                }
+                } else { lines.push(rawText); }
             }
 
             let fontSize = lines.length >= 3 ? 65 : (lines.length === 2 ? 80 : 95);
             textCtx.font = `900 ${fontSize}px sans-serif`;
-            textCtx.textAlign = 'center';
-            textCtx.textBaseline = 'middle';
+            textCtx.textAlign = 'center'; textCtx.textBaseline = 'middle';
 
             const lh = fontSize * 1.35;
             const startY = 512 - ((lines.length - 1) * lh) / 2;
@@ -384,7 +286,7 @@ MAY THE FORCE BE WITH YOU</textarea>
             textTexture.needsUpdate = true;
         }
 
-        // --- 4. 輪播與自動旋轉控制 ---
+        // --- 4. 輪播與自動旋轉方向控制 ---
         let messageList = ["祝大家中秋節快樂！", "月圓人團圓，事事順心！", "MAY THE FORCE BE WITH YOU"];
         let msgIndex = 0;
 
@@ -399,8 +301,8 @@ MAY THE FORCE BE WITH YOU</textarea>
         const uiPanel = document.getElementById('ui-panel');
         document.getElementById('panel-toggle-btn').onclick = () => uiPanel.classList.toggle('collapsed');
 
-        // 預設將球體角度置於月球側面 (-Math.PI / 2)，讓它自動慢慢轉向畫面正中央 (0)
-        planetMesh.rotation.y = -Math.PI * 0.5;
+        // 初始化旋轉角度：將月球放在鏡頭正面 (PI)，死星隱藏在背面
+        planetMesh.rotation.y = Math.PI;
 
         document.getElementById('play-btn').onclick = () => {
             const val = document.getElementById('msg-input').value.trim();
@@ -410,18 +312,17 @@ MAY THE FORCE BE WITH YOU</textarea>
                 updateCarousel();
             }
             uiPanel.classList.add('collapsed');
-            // 重置為月球角度，觸發自動慢速旋轉
-            planetMesh.rotation.y = -Math.PI * 0.5;
+            // 重置為月球正面，重新觸發轉動
+            planetMesh.rotation.y = Math.PI;
         };
 
         let animTime = 0;
         function animate() {
             requestAnimationFrame(animate);
 
-            // 自動慢速旋轉：當角度小於 0（正面面對鏡頭）時持續自動運轉
-            if (planetMesh.rotation.y < 0) {
-                planetMesh.rotation.y += 0.006;
-                if (planetMesh.rotation.y > 0) planetMesh.rotation.y = 0;
+            // 自動慢速旋轉：從 Math.PI (月球) 平滑旋轉到 Math.PI * 0.5 (死星發射孔面對觀察者)
+            if (planetMesh.rotation.y > Math.PI * 0.5) {
+                planetMesh.rotation.y -= 0.006;
             }
 
             animTime += 0.05;
