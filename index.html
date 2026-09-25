@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Death Star Holo-Comm | 中秋全息通訊</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #030508;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            color: #00ffaa;
+        }
+        #webgl-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        .hud-header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            pointer-events: none;
+            border-left: 3px solid #00ffaa;
+            padding: 10px 16px;
+            background: rgba(3, 10, 15, 0.65);
+            backdrop-filter: blur(8px);
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 0 15px rgba(0, 255, 170, 0.15);
+        }
+        .hud-title {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #ffffff;
+            text-transform: uppercase;
+            text-shadow: 0 0 8px #00ffaa;
+        }
+        .hud-subtitle {
+            font-size: 11px;
+            color: #00ffaa;
+            opacity: 0.8;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+        .top-right-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            display: flex;
+            gap: 10px;
+        }
+        .icon-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(5, 20, 25, 0.75);
+            border: 1px solid rgba(0, 255, 170, 0.4);
+            color: #00ffaa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 170, 0.2);
+        }
+        .icon-btn:active {
+            transform: scale(0.92);
+            background: rgba(0, 255, 170, 0.3);
+        }
+        .ui-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 500px;
+            background: rgba(5, 15, 22, 0.88);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 255, 170, 0.3);
+            border-radius: 16px;
+            padding: 18px;
+            z-index: 10;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        }
+        .ui-panel.collapsed {
+            transform: translate(-50%, calc(100% + 30px));
+            opacity: 0;
+            pointer-events: none;
+        }
+        .panel-toggle-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9;
+            padding: 10px 20px;
+            background: rgba(5, 20, 25, 0.85);
+            border: 1px solid #00ffaa;
+            border-radius: 20px;
+            color: #00ffaa;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
+        }
+        textarea.msg-input {
+            width: 100%;
+            height: 70px;
+            background: rgba(0, 10, 18, 0.7);
+            border: 1px solid rgba(0, 255, 170, 0.3);
+            border-radius: 8px;
+            color: #ffffff;
+            padding: 10px;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+        }
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .btn {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #00ffaa;
+            background: rgba(0, 255, 170, 0.12);
+            color: #00ffaa;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: #00ffaa;
+            color: #030508;
+            border: none;
+        }
+        .scanlines {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 2;
+            opacity: 0.6;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div id="webgl-container"></div>
+
+    <div class="hud-header">
+        <div class="hud-title">DEATH STAR HOLO-COMM</div>
+        <div class="hud-subtitle">IMPERIAL MID-AUTUMN TRANSMISSION</div>
+    </div>
+
+    <div class="top-right-controls">
+        <button class="icon-btn" id="audio-toggle-btn" title="切換音樂">🎵</button>
+        <button class="icon-btn" id="share-btn" title="複製連結">🔗</button>
+    </div>
+
+    <button class="panel-toggle-btn" id="panel-toggle-btn">⚙️ 控制面板</button>
+
+    <div class="ui-panel collapsed" id="ui-panel">
+        <label style="font-size:12px; color:#88ccee; margin-bottom:6px; display:block;">全息祝賀詞（多行自動斷句輪播）</label>
+        <textarea class="msg-input" id="msg-input">祝大家中秋節快樂！
+月圓人團圓，事事順心！
+MAY THE FORCE BE WITH YOU</textarea>
+        <div class="btn-grid">
+            <button class="btn btn-primary" id="play-btn">▶️ 展演動畫</button>
+            <button class="btn" id="record-btn">🎥 錄影下載</button>
+        </div>
+    </div>
+
+    <script>
+        const container = document.getElementById('webgl-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x030508, 0.015);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 8.5);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 4.0;
+        controls.maxDistance = 14.0;
+
+        // --- 1. 高細節雙面 3D 貼圖繪製 (月球與死星發射孔) ---
+        function createPlanetTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 2048;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+
+            // 鋼鐵底色
+            ctx.fillStyle = '#1e2228';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 左半面 (0 ~ 1024)：月球質感與坑洞
+            const imgData = ctx.getImageData(0, 0, canvas.width / 2, canvas.height);
+            const data = imgData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                let n = (Math.random() * 50 - 25) + Math.sin(i * 0.005) * 20;
+                let val = 150 + n;
+                data[i] = val;     // R
+                data[i+1] = val + 2; // G
+                data[i+2] = val + 8; // B
+            }
+            ctx.putImageData(imgData, 0, 0);
+
+            // 月球表面隕石坑點綴
+            ctx.fillStyle = 'rgba(100, 105, 115, 0.4)';
+            for(let i=0; i<40; i++) {
+                let cx = Math.random() * (canvas.width / 2);
+                let cy = Math.random() * canvas.height;
+                let cr = 10 + Math.random() * 40;
+                ctx.beginPath();
+                ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 右半面 (1024 ~ 2048)：死星裝甲板與超級雷射發射孔
+            ctx.strokeStyle = '#0d1014';
+            ctx.lineWidth = 4;
+            for (let y = 0; y < canvas.height; y += 24) {
+                ctx.beginPath();
+                ctx.moveTo(canvas.width / 2, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // 赤道溝槽
+            ctx.fillStyle = '#080a0c';
+            ctx.fillRect(canvas.width / 2, canvas.height / 2 - 16, canvas.width / 2, 32);
+
+            // 超級雷射凹面圓盤 (Dish Center 精確設在 UV 0.75, 0.50 -> Canvas 1536, 512)
+            const dishX = canvas.width * 0.75;
+            const dishY = canvas.height * 0.50;
+            const dishR = 160;
+
+            for (let r = dishR; r > 10; r -= 14) {
+                ctx.beginPath();
+                ctx.arc(dishX, dishY, r, 0, Math.PI * 2);
+                ctx.fillStyle = (r % 28 === 0) ? '#12151a' : '#282d36';
+                ctx.fill();
+                ctx.strokeStyle = '#0a0c0e';
+                ctx.stroke();
+            }
+
+            // 中央綠色發射點
+            ctx.beginPath();
+            ctx.arc(dishX, dishY, 18, 0, Math.PI * 2);
+            ctx.fillStyle = '#00ff88';
+            ctx.shadowColor = '#00ff88';
+            ctx.shadowBlur = 20;
+            ctx.fill();
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        const planetMat = new THREE.MeshStandardMaterial({
+            map: createPlanetTexture(),
+            roughness: 0.5,
+            metalness: 0.4
+        });
+
+        const sphereGeo = new THREE.SphereGeometry(2.2, 64, 64);
+        const planetMesh = new THREE.Mesh(sphereGeo, planetMat);
+        scene.add(planetMesh);
+
+        // 燈光設定
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
+        dirLight.position.set(5, 3, 5);
+        scene.add(dirLight);
+        scene.add(new THREE.AmbientLight(0x223344, 0.6));
+
+        // --- 2. 精確三維錨點 (與 UV 0.75, 0.50 100% 絕對對齊) ---
+        // 在 3D 球體預設角度下，UV 0.75 位於 (X = 2.2, Y = 0, Z = 0) 處
+        const superlaserAnchorGroup = new THREE.Group();
+        superlaserAnchorGroup.position.set(2.2, 0, 0); 
+        superlaserAnchorGroup.rotation.set(0, Math.PI / 2, 0); // 朝向外側法線發射
+        planetMesh.add(superlaserAnchorGroup);
+
+        // 綠色全息光錐
+        const coneGeo = new THREE.ConeGeometry(1.8, 3.5, 32, 1, true);
+        coneGeo.translate(0, 1.75, 0);
+        coneGeo.rotateX(Math.PI / 2);
+        const holoCone = new THREE.Mesh(coneGeo, new THREE.MeshBasicMaterial({
+            color: 0x00ff88,
+            transparent: true,
+            opacity: 0.25,
+            side: THREE.DoubleSide,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        }));
+        superlaserAnchorGroup.add(holoCone);
+
+        // --- 3. 全息文字與 CJK/英文 智慧換行 ---
+        const textCanvas = document.createElement('canvas');
+        textCanvas.width = 1024;
+        textCanvas.height = 1024;
+        const textCtx = textCanvas.getContext('2d');
+        const textTexture = new THREE.CanvasTexture(textCanvas);
+
+        const textPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(3.2, 3.2),
+            new THREE.MeshBasicMaterial({
+                map: textTexture,
+                transparent: true,
+                opacity: 0.95,
+                side: THREE.DoubleSide,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            })
+        );
+        textPlane.position.set(0, 0, 3.5);
+        superlaserAnchorGroup.add(textPlane);
+
+        function renderHologramText(rawText) {
+            textCtx.clearRect(0, 0, 1024, 1024);
+
+            // 圓形 HUD 雷射框
+            textCtx.strokeStyle = 'rgba(0, 255, 136, 0.4)';
+            textCtx.lineWidth = 4;
+            textCtx.beginPath(); textCtx.arc(512, 512, 480, 0, Math.PI * 2); textCtx.stroke();
+            textCtx.beginPath(); textCtx.arc(512, 512, 360, 0, Math.PI * 2); textCtx.stroke();
+
+            // 智慧斷行算法 (英文依空格，中文依字數)
+            let lines = [];
+            if (rawText.includes(' ')) {
+                const words = rawText.split(' ');
+                let cur = '';
+                words.forEach(w => {
+                    if ((cur + ' ' + w).length > 12) {
+                        lines.push(cur.trim());
+                        cur = w;
+                    } else {
+                        cur += (cur ? ' ' : '') + w;
+                    }
+                });
+                if (cur) lines.push(cur.trim());
+            } else {
+                if (rawText.length > 6) {
+                    const mid = Math.ceil(rawText.length / 2);
+                    lines.push(rawText.substring(0, mid));
+                    lines.push(rawText.substring(mid));
+                } else {
+                    lines.push(rawText);
+                }
+            }
+
+            let fontSize = lines.length >= 3 ? 65 : (lines.length === 2 ? 80 : 95);
+            textCtx.font = `900 ${fontSize}px sans-serif`;
+            textCtx.textAlign = 'center';
+            textCtx.textBaseline = 'middle';
+
+            const lh = fontSize * 1.35;
+            const startY = 512 - ((lines.length - 1) * lh) / 2;
+
+            lines.forEach((l, idx) => {
+                const y = startY + (idx * lh);
+                textCtx.strokeStyle = '#004422'; textCtx.lineWidth = 14; textCtx.strokeText(l, 512, y);
+                textCtx.strokeStyle = '#00ff88'; textCtx.lineWidth = 5; textCtx.strokeText(l, 512, y);
+                textCtx.fillStyle = '#ffffff'; textCtx.fillText(l, 512, y);
+            });
+
+            textTexture.needsUpdate = true;
+        }
+
+        // --- 4. 動畫與控制邏輯 ---
+        let messageList = ["祝大家中秋節快樂！", "月圓人團圓，事事順心！", "MAY THE FORCE BE WITH YOU"];
+        let msgIndex = 0;
+
+        function updateCarousel() {
+            renderHologramText(messageList[msgIndex]);
+            msgIndex = (msgIndex + 1) % messageList.length;
+        }
+
+        setInterval(updateCarousel, 4000);
+        updateCarousel();
+
+        const uiPanel = document.getElementById('ui-panel');
+        document.getElementById('panel-toggle-btn').onclick = () => uiPanel.classList.toggle('collapsed');
+
+        document.getElementById('play-btn').onclick = () => {
+            const val = document.getElementById('msg-input').value.trim();
+            if (val) {
+                messageList = val.split('\n').filter(s => s.trim());
+                msgIndex = 0;
+                updateCarousel();
+            }
+            uiPanel.classList.add('collapsed');
+            planetMesh.rotation.y = -Math.PI * 0.5; // 重新從月球側面開始旋轉
+        };
+
+        // 初始角度設定：讓死星預設正面轉向中央
+        planetMesh.rotation.y = 0;
+
+        let animTime = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // 沉穩緩慢轉向畫面正中央
+            if (planetMesh.rotation.y < 0) {
+                planetMesh.rotation.y += 0.005;
+            }
+
+            animTime += 0.05;
+            holoCone.material.opacity = 0.22 + Math.sin(animTime * 3) * 0.05;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.onresize = () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        };
+
+        animate();
+    </script>
+</body>
+</html>
