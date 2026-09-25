@@ -46,16 +46,28 @@
         .hud-subtitle {
             font-size: 11px; color: #00ffaa; opacity: 0.8; letter-spacing: 1px; margin-top: 2px;
         }
-        .top-right-controls {
-            position: absolute; top: 20px; right: 20px; z-index: 10;
-            display: flex; gap: 10px;
+
+        .hud-status-panel {
+            position: absolute;
+            top: 20px; right: 20px;
+            z-index: 10;
+            pointer-events: none;
+            text-align: right;
+            background: rgba(3, 10, 15, 0.65);
+            border-right: 3px solid #00ffaa;
+            padding: 10px 16px;
+            backdrop-filter: blur(8px);
+            border-radius: 8px 0 0 8px;
+            box-shadow: 0 0 15px rgba(0, 255, 170, 0.15);
         }
-        .icon-btn {
-            width: 44px; height: 44px; border-radius: 50%;
-            background: rgba(5, 20, 25, 0.75); border: 1px solid rgba(0, 255, 170, 0.4);
-            color: #00ffaa; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; backdrop-filter: blur(8px);
+        .hud-status-label {
+            font-size: 10px; color: #88ccee; letter-spacing: 1.5px; text-transform: uppercase;
         }
+        .hud-status-val {
+            font-size: 13px; font-weight: bold; color: #00ffaa; letter-spacing: 1px; margin-top: 2px;
+            font-family: monospace; text-shadow: 0 0 6px #00ffaa;
+        }
+
         .ui-panel {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
             width: calc(100% - 40px); max-width: 500px;
@@ -104,8 +116,9 @@
         <div class="hud-subtitle">IMPERIAL MID-AUTUMN TRANSMISSION</div>
     </div>
 
-    <div class="top-right-controls">
-        <button class="icon-btn" id="share-btn" title="複製連結">🔗</button>
+    <div class="hud-status-panel">
+        <div class="hud-status-label">SYS_STATUS</div>
+        <div class="hud-status-val" id="status-text">INITIALIZING...</div>
     </div>
 
     <button class="panel-toggle-btn" id="panel-toggle-btn">⚙️ 控制面板</button>
@@ -122,9 +135,14 @@ MAY THE FORCE BE WITH YOU</textarea>
     </div>
 
     <script>
+        const statusText = document.getElementById('status-text');
+        function setStatus(text) {
+            if (statusText) statusText.innerText = text;
+        }
+
         const container = document.getElementById('webgl-container');
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x030508, 0.015);
+        scene.fog = new THREE.FogExp2(0x030508, 0.012);
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, 0, 8.5);
@@ -137,41 +155,51 @@ MAY THE FORCE BE WITH YOU</textarea>
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
 
-        // --- 1. Canvas 貼圖繪製 (基底金屬與月球表面) ---
+        // --- 1. 死星帝國灰質調貼圖 (絕不發白過曝) ---
         function createPlanetTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 2048; canvas.height = 1024;
             const ctx = canvas.getContext('2d');
 
-            ctx.fillStyle = '#181b20';
+            // 死星鋼鐵基底 (適度沉穩的深灰色 #242930)
+            ctx.fillStyle = '#242930';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 橫向金屬線
-            ctx.strokeStyle = '#0d0f12'; ctx.lineWidth = 3;
-            for (let y = 0; y < canvas.height; y += 16) {
+            // 鋼鐵縫隙與裝甲劃線
+            ctx.strokeStyle = '#12151a'; ctx.lineWidth = 3;
+            for (let y = 0; y < canvas.height; y += 14) {
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
 
-            // 縱向金屬線
-            ctx.strokeStyle = '#111418'; ctx.lineWidth = 2;
-            for (let x = 0; x < canvas.width; x += 32) {
+            ctx.strokeStyle = '#1a1e24'; ctx.lineWidth = 2;
+            for (let x = 0; x < canvas.width; x += 28) {
                 ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
             }
 
-            // 赤道溝槽
-            ctx.fillStyle = '#060709';
-            ctx.fillRect(0, canvas.height / 2 - 14, canvas.width, 28);
-            ctx.strokeStyle = '#222730'; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.moveTo(0, canvas.height / 2 - 14); ctx.lineTo(canvas.width, canvas.height / 2 - 14); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, canvas.height / 2 + 14); ctx.lineTo(canvas.width, canvas.height / 2 + 14); ctx.stroke();
+            // 金屬裝甲板層次塊
+            for (let i = 0; i < 150; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? 'rgba(55, 63, 75, 0.4)' : 'rgba(18, 22, 28, 0.4)';
+                let rx = Math.random() * canvas.width;
+                let ry = Math.random() * canvas.height;
+                let rw = 15 + Math.random() * 45;
+                let rh = 10 + Math.random() * 25;
+                ctx.fillRect(rx, ry, rw, rh);
+            }
 
-            // 月球表面質感 (X: 0~512 與 1536~2048)
+            // 赤道溝槽
+            ctx.fillStyle = '#0c0e12';
+            ctx.fillRect(0, canvas.height / 2 - 16, canvas.width, 32);
+            ctx.strokeStyle = '#384150'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(0, canvas.height / 2 - 16); ctx.lineTo(canvas.width, canvas.height / 2 - 16); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, canvas.height / 2 + 16); ctx.lineTo(canvas.width, canvas.height / 2 + 16); ctx.stroke();
+
+            // 1B. 亮灰質感的月球表面 (亮暗分明)
             function drawMoonSection(startX, width) {
                 const imgData = ctx.getImageData(startX, 0, width, canvas.height);
                 const data = imgData.data;
                 for (let i = 0; i < data.length; i += 4) {
-                    let n = (Math.random() * 50 - 25) + Math.sin(i * 0.005) * 20;
-                    let val = 150 + n;
+                    let n = (Math.random() * 60 - 30) + Math.sin(i * 0.005) * 20;
+                    let val = 180 + n;
                     data[i] = val; data[i+1] = val + 2; data[i+2] = val + 8;
                 }
                 ctx.putImageData(imgData, startX, 0);
@@ -179,13 +207,27 @@ MAY THE FORCE BE WITH YOU</textarea>
             drawMoonSection(0, 512);
             drawMoonSection(1536, 512);
 
-            // 月球坑洞
-            ctx.fillStyle = 'rgba(100, 105, 115, 0.45)';
-            for(let i=0; i<40; i++) {
+            // 1C. 立體月球隕石坑
+            for(let i = 0; i < 45; i++) {
                 let cx = (Math.random() > 0.5 ? 0 : 1536) + Math.random() * 512;
                 let cy = Math.random() * canvas.height;
-                let cr = 10 + Math.random() * 40;
-                ctx.beginPath(); ctx.arc(cx, cy, cr, 0, Math.PI * 2); ctx.fill();
+                let cr = 12 + Math.random() * 42;
+
+                let grad = ctx.createRadialGradient(cx - cr * 0.3, cy - cr * 0.3, cr * 0.1, cx, cy, cr);
+                grad.addColorStop(0, 'rgba(50, 55, 65, 0.85)');
+                grad.addColorStop(0.7, 'rgba(110, 118, 130, 0.6)');
+                grad.addColorStop(1, 'rgba(220, 228, 240, 0.9)');
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, cr + 1, Math.PI * 0.15, Math.PI * 0.85);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
             }
 
             const texture = new THREE.CanvasTexture(canvas);
@@ -193,9 +235,10 @@ MAY THE FORCE BE WITH YOU</textarea>
             return texture;
         }
 
+        // 霧面帝國金屬 (Roughness: 0.55 均勻散光，防高光刺眼)
         const planetMat = new THREE.MeshStandardMaterial({
             map: createPlanetTexture(),
-            roughness: 0.45,
+            roughness: 0.55,
             metalness: 0.5
         });
 
@@ -204,11 +247,18 @@ MAY THE FORCE BE WITH YOU</textarea>
         const planetMesh = new THREE.Mesh(sphereGeo, planetMat);
         scene.add(planetMesh);
 
-        // 燈光
+        // 🌟【燈光完美對比修正】：自然立體單一側面主光，絕無正面暴閃光束
         const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
-        dirLight.position.set(5, 3, 5);
+        dirLight.position.set(6, 4, 5);
         scene.add(dirLight);
-        scene.add(new THREE.AmbientLight(0x223344, 0.6));
+
+        // 柔和暗面補光
+        const fillLight = new THREE.DirectionalLight(0x557799, 0.6);
+        fillLight.position.set(-6, -2, -3);
+        scene.add(fillLight);
+
+        // 適度環境採光
+        scene.add(new THREE.AmbientLight(0x222d38, 0.7));
 
         // --- 2. 3D 立體凹盤 ---
         const dishDepth = 0.22;
@@ -222,15 +272,15 @@ MAY THE FORCE BE WITH YOU</textarea>
             const ctx = canvas.getContext('2d');
             const cx = 256, cy = 256;
 
-            ctx.fillStyle = '#1b1f26'; ctx.fillRect(0, 0, 512, 512);
+            ctx.fillStyle = '#222832'; ctx.fillRect(0, 0, 512, 512);
 
             for (let r = 240; r > 20; r -= 24) {
                 ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
-                ctx.fillStyle = (r % 48 === 0) ? '#12151b' : '#252b36'; ctx.fill();
-                ctx.strokeStyle = '#0a0c0e'; ctx.lineWidth = 3; ctx.stroke();
+                ctx.fillStyle = (r % 48 === 0) ? '#161a22' : '#2f3745'; ctx.fill();
+                ctx.strokeStyle = '#0a0d12'; ctx.lineWidth = 3; ctx.stroke();
             }
 
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)'; ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)'; ctx.lineWidth = 2;
             for (let i = 0; i < 32; i++) {
                 let angle = (i / 32) * Math.PI * 2;
                 ctx.beginPath();
@@ -247,7 +297,7 @@ MAY THE FORCE BE WITH YOU</textarea>
 
         const dishMat = new THREE.MeshStandardMaterial({
             map: createDishCanvasTexture(),
-            roughness: 0.35,
+            roughness: 0.4,
             metalness: 0.6,
             side: THREE.DoubleSide
         });
@@ -272,7 +322,7 @@ MAY THE FORCE BE WITH YOU</textarea>
         dishMesh.rotation.set(Math.PI / 2, 0, 0);
         superlaserAnchorGroup.add(dishMesh);
 
-        // --- 4. 全息光錐與全息文字 Plane ---
+        // --- 4. 全息光錐、游離粒子與文字 Plane ---
         const coneHeight = 3.2;
         const coneGeo = new THREE.ConeGeometry(1.8, coneHeight, 32, 1, true);
         coneGeo.translate(0, -coneHeight / 2, 0);
@@ -283,7 +333,7 @@ MAY THE FORCE BE WITH YOU</textarea>
         }));
         superlaserAnchorGroup.add(holoCone);
 
-        // --- 🌟【新增：光錐游離粒子系統】🌟 ---
+        // 游離粒子系統
         const particleCount = 180;
         const particleGeo = new THREE.BufferGeometry();
         const particlePos = new Float32Array(particleCount * 3);
@@ -291,15 +341,14 @@ MAY THE FORCE BE WITH YOU</textarea>
         const particleOriginalR = [];
 
         for (let i = 0; i < particleCount; i++) {
-            // 粒子沿 Z 軸 (0 ~ coneHeight) 分佈
             let z = Math.random() * coneHeight;
-            let currentRadiusAtZ = (z / coneHeight) * 1.7; // 隨光錐擴散半徑
+            let currentRadiusAtZ = (z / coneHeight) * 1.7;
             let angle = Math.random() * Math.PI * 2;
             let r = Math.sqrt(Math.random()) * currentRadiusAtZ;
 
-            particlePos[i * 3] = Math.cos(angle) * r;     // Local X
-            particlePos[i * 3 + 1] = Math.sin(angle) * r; // Local Y
-            particlePos[i * 3 + 2] = z;                  // Local Z
+            particlePos[i * 3] = Math.cos(angle) * r;
+            particlePos[i * 3 + 1] = Math.sin(angle) * r;
+            particlePos[i * 3 + 2] = z;
 
             particleSpeed.push(0.008 + Math.random() * 0.015);
             particleOriginalR.push(r / (currentRadiusAtZ || 1));
@@ -307,7 +356,6 @@ MAY THE FORCE BE WITH YOU</textarea>
 
         particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
 
-        // 圓形粒子貼圖 Canvas
         function createParticleTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 32; canvas.height = 32;
@@ -389,7 +437,7 @@ MAY THE FORCE BE WITH YOU</textarea>
             textTexture.needsUpdate = true;
         }
 
-        // --- 5. 輪播控制與【轉動居中後才開始輪播】邏輯 ---
+        // --- 5. 輪播控制 ---
         let messageList = ["祝大家中秋節快樂！", "月圓人團圓，事事順心！", "MAY THE FORCE BE WITH YOU"];
         let msgIndex = 0;
         let carouselTimer = null;
@@ -399,6 +447,7 @@ MAY THE FORCE BE WITH YOU</textarea>
 
         function updateCarousel() {
             renderHologramText(messageList[msgIndex]);
+            setStatus(`TRANSMITTING [${msgIndex + 1}/${messageList.length}]`);
             msgIndex = (msgIndex + 1) % messageList.length;
 
             if (isRecordingSequence) {
@@ -438,6 +487,7 @@ MAY THE FORCE BE WITH YOU</textarea>
         function resetSpherePose() {
             stopCarousel();
             planetMesh.rotation.set(0, START_ANGLE_Y, 0);
+            setStatus('MOON_PHASE: FULL_MOON');
         }
 
         resetSpherePose();
@@ -510,7 +560,7 @@ MAY THE FORCE BE WITH YOU</textarea>
             }
         }
 
-        // 7. 動畫主循環（含粒子動態游離計算）
+        // 7. 動畫主循環
         let animTime = 0;
         function animate() {
             requestAnimationFrame(animate);
@@ -518,11 +568,13 @@ MAY THE FORCE BE WITH YOU</textarea>
             // 階段 1: 水平旋轉
             if (planetMesh.rotation.y < TARGET_ANGLE_Y) {
                 planetMesh.rotation.y += 0.006;
+                setStatus('TRANSITIONING: MOON->DEATH_STAR');
                 if (planetMesh.rotation.y > TARGET_ANGLE_Y) planetMesh.rotation.y = TARGET_ANGLE_Y;
             } 
             // 階段 2: 旋轉完成後向下傾斜點頭
             else if (planetMesh.rotation.x < TARGET_ANGLE_X) {
                 planetMesh.rotation.x += 0.005;
+                setStatus('ALIGNING_SUPERLASER...');
                 if (planetMesh.rotation.x > TARGET_ANGLE_X) {
                     planetMesh.rotation.x = TARGET_ANGLE_X;
                     triggerCarouselStart();
@@ -531,17 +583,13 @@ MAY THE FORCE BE WITH YOU</textarea>
                 triggerCarouselStart();
             }
 
-            // 🌟 粒子游離浮動效果更新
+            // 粒子游離計算
             const pPositions = particleGeo.attributes.position.array;
             for (let i = 0; i < particleCount; i++) {
-                pPositions[i * 3 + 2] += particleSpeed[i]; // 向 Z 軸外側游離推進
-
-                // 粒子超出光錐長度時，重置回發射孔底端
+                pPositions[i * 3 + 2] += particleSpeed[i];
                 if (pPositions[i * 3 + 2] > coneHeight) {
                     pPositions[i * 3 + 2] = 0.1;
                 }
-
-                // 隨 Z 軸推進動態微調 X/Y 半徑，確保粒子不超出光錐壁
                 let currentRadiusAtZ = (pPositions[i * 3 + 2] / coneHeight) * 1.7;
                 let angle = Math.atan2(pPositions[i * 3 + 1], pPositions[i * 3]);
                 let r = particleOriginalR[i] * currentRadiusAtZ;
